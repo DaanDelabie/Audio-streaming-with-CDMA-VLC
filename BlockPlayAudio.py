@@ -43,7 +43,7 @@ class BlockPlayAudioThread(threading.Thread):
     def run(self):
         # Variable
         counter = 0
-        # Checks
+
         first_time = True
 
         # Queue
@@ -65,23 +65,11 @@ class BlockPlayAudioThread(threading.Thread):
             # checks if the queue is empty
             # size of queue is defined in the HoldData files
             if not queue_song_data.empty():
-                if counter == config['PlayAudio_buffer']:
-                    if first_time:
-                        # break audio into half-second chunks (to allows keyboard interrupts)
-                        for chunk in util.make_chunks(buffer, 500):
-                            stream.write(chunk._data)
-
-                        first_time = False
-                    else:
-                        # break audio into half-second chunks (to allows keyboard interrupts)
-                        for chunk in util.make_chunks(queue_song_data.get(), 500):
-                            stream.write(chunk._data)
-                else:
-                    # Count
-                    counter = counter + 1
-                    print("Counter PlayAudio is " + str(counter))
-                    # Buffer a couple of AudioSegments
-                    buffer = buffer + queue_song_data.get()
+                if first_time and queue_song_data.qsize() > config['PlayAudio_buffer']:
+                    stream.write(queue_song_data.get().raw_data)
+                    first_time = False
+                elif not first_time:
+                    stream.write(queue_song_data.get().raw_data)
 
         # Close and terminate the stream
         stream.stop_stream()

@@ -27,6 +27,6 @@
    "packet_start_part": 0,
    "packet_end_part": 0,
    "unpack_enable": false,
-   "SourceDecoder_buffer": 5,
+   "SourceDecoder_buffer": 3,
    "PlayAudio_buffer": 2
  }

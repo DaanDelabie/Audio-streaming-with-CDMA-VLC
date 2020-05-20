@@ -31,31 +31,26 @@ def CDMA_Decoder(input, user, send_values):
 
     # 3) Determining the sample rate from the preamble synchronisation code
     if config['distance'] == 1:
-        samples_total_per_level, bin_edges = np.histogram(
-            input[0:(config['synchronisation_bits'] * config['sample_factor'])], bins=3)
+        samples_total_per_level, bin_edges = np.histogram(input[0:(config['synchronisation_bits'] * config['sample_factor'])], bins=3)
         samples_per_bit = int(round(statistics.median(samples_total_per_level) / (config['synchronisation_bits'] / 2)))
-    else:
-        if config['distance'] == 2:
-            samples_total_per_level, bin_edges = np.histogram(
-                input[0:(config['synchronisation_bits'] * config['sample_factor'])], bins=2)
-            samples_per_bit = int(round(min(samples_total_per_level) / (config['synchronisation_bits'] / 2)))
-        else:
-            if config['distance'] == 3:
-                sampleCount = 1
-                samplesCounted = np.array([])
-                for i in range(1, 200):
-                    upperBoundry = input[i - 1] + (input[i - 1] * config['deviation'])
-                    lowerBoundry = input[i - 1] - (input[i - 1] * config['deviation'])
-                    if lowerBoundry < input[i] < upperBoundry:
-                        sampleCount = sampleCount + 1
-                    else:
-                        samplesCounted = np.append(samplesCounted, [sampleCount], axis=0)
-                        sampleCount = 1
+    elif config['distance'] == 2:
+        samples_total_per_level, bin_edges = np.histogram(input[0:(config['synchronisation_bits'] * config['sample_factor'])], bins=2)
+        samples_per_bit = int(round(min(samples_total_per_level) / (config['synchronisation_bits'] / 2)))
+    elif config['distance'] == 3:
+            sampleCount = 1
+            samplesCounted = np.array([])
+            for i in range(1, 200):
+                upperBoundry = input[i - 1] + (input[i - 1] * config['deviation'])
+                lowerBoundry = input[i - 1] - (input[i - 1] * config['deviation'])
+                if lowerBoundry < input[i] < upperBoundry:
+                    sampleCount = sampleCount + 1
+                else:
+                    samplesCounted = np.append(samplesCounted, [sampleCount], axis=0)
+                    sampleCount = 1
 
-                samples_per_bit = round(int(np.mean(samplesCounted)))
-            else:
-                if config['distance'] == 4:
-                    samples_per_bit = config['samples_per_level']
+            samples_per_bit = round(int(np.mean(samplesCounted)))
+    elif config['distance'] == 4:
+        samples_per_bit = config['samples_per_level']
 
     # 4) Eliminating the samples (with the average of the sample values inside a symbol period
     bitArray = (input.reshape(-1, samples_per_bit)).mean(1)
@@ -91,9 +86,8 @@ def CDMA_Decoder(input, user, send_values):
     # 9) Elimination of the synchronisation bits
     if (config['rake_receiver_correlator'] == True):
         pureDataStream = bipData[startBitPosition[0]:]
-    else:
-        if (config['rake_receiver_correlator'] == False):
-            pureDataStream = bipData[estimatedStartBitPosition:]
+    elif (config['rake_receiver_correlator'] == False):
+        pureDataStream = bipData[estimatedStartBitPosition:]
 
     # 10) PAM demodulation detector (also elemenating difference factor)(3 levels: -1 0 +1)
     # Di = abs(received signal - theoretical amplitude)
